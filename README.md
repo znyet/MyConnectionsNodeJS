@@ -44,7 +44,7 @@ co(function*() {
     let count = yield conn.deleteById(model, 1);
 
     //getById
-    let p = yield  conn.getById(model,1);
+    let p = yield conn.getById(model,1);
 
     console.log(result);
 
