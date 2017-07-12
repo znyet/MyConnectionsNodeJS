@@ -35,10 +35,10 @@ co(function*() {
     model.Score = 100;
 
     //insert
-    let Id = yield conn.insert(model);
+    let id = yield conn.insert(model);
 
     //update
-    let result = yield conn.getById(model);
+    let result = yield conn.update(model);
 
     //delete
     let count = yield conn.deleteById(model, 1);
