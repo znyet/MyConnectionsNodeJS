@@ -1,6 +1,6 @@
 # dbhelper
 dbhelper
-<h1>node.js orm</h1>
+<h1>node.js orm for mysql</h1>
 
 <h2>people.js</h2>
 
