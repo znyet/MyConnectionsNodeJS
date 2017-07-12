@@ -3,6 +3,7 @@ dbhelper
 <h1>node.js orm</h1>
 
 <h2>people.js</h2>
+
 ```javascript
 function people() {
     this.Id = 0;
@@ -16,4 +17,5 @@ people.prototype.KeyName = "Id";
 people.prototype.IsIdentity = true;
 
 module.exports = people;
+```
 
