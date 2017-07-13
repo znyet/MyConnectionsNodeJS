@@ -2,6 +2,8 @@ let util = require("util");
 let mysql = require("mysql");
 let Connection = require("mysql/lib/Connection");
 
+//when return undefined,It means the query is error.
+
 Connection.prototype.exe = function (sql, param, cb) {
     this.query(sql, param, function (e, rows, fields) {
 
@@ -9,6 +11,7 @@ Connection.prototype.exe = function (sql, param, cb) {
             console.error(e);
             console.error(sql);
             console.error(param);
+            cb(undefined);
             return;
         }
 
@@ -32,6 +35,7 @@ Connection.prototype.exeSync = function (sql, param) {
                 console.error(e);
                 console.error(sql);
                 console.error(param);
+                cb(null, undefined);
                 return;
             }
 
@@ -54,6 +58,7 @@ Connection.prototype.q = function (sql, param, cb) {
             console.error(e);
             console.error(sql);
             console.error(param);
+            cb(undefined);
             return;
         }
 
@@ -71,6 +76,7 @@ Connection.prototype.qSync = function (sql, param) {
                 console.error(e);
                 console.error(sql);
                 console.error(param);
+                cb(null, undefined);
                 return;
             }
             cb(null, rows);
@@ -85,6 +91,7 @@ Connection.prototype.qFirst = function (sql, param, cb) {
             console.error(e);
             console.error(sql);
             console.error(param);
+            cb(undefined);
             return;
         }
 
@@ -92,7 +99,7 @@ Connection.prototype.qFirst = function (sql, param, cb) {
             if (rows.length > 0)
                 cb(rows[0]);
             else
-                cb(null, null);
+                cb(null);
         }
     })
 
@@ -106,6 +113,7 @@ Connection.prototype.qFirstSync = function (sql, param) { //同步方法
                 console.error(e);
                 console.error(sql);
                 console.error(param);
+                cb(null, undefined);
                 return;
             }
             if (rows.length > 0)
@@ -122,7 +130,7 @@ Connection.prototype.beginTran = function () {
         me.beginTransaction(function (e) {
             if (e) {
                 console.error(e);
-                cb(null, false);
+                cb(null, undefined);
             } else
                 cb(null, true);
         })
@@ -135,7 +143,7 @@ Connection.prototype.commitTran = function () {
         me.commit(function (e) {
             if (e) {
                 console.error(e);
-                cb(null, false);
+                cb(null, undefined);
             } else
                 cb(null, true);
         })
@@ -148,7 +156,7 @@ Connection.prototype.rollbackTran = function () {
         me.rollback(function (e) {
             if (e) {
                 console.error(e);
-                cb(null, false);
+                cb(null, undefined);
             } else
                 cb(null, true);
         })
@@ -336,7 +344,10 @@ Connection.prototype.getTotal = function (model, where, param) {
     let sql = util.format("SELECT COUNT(1) as A FROM `%s`  %s", model.TableName, where);
     return function (cb) {
         me.qFirst(sql, param, function (row) {
-            cb(null, row.A);
+            if (row === undefined)
+                cb(null, undefined);
+            else
+                cb(null, row.A);
         });
     }
 };
@@ -348,7 +359,6 @@ Connection.prototype.getBySkipTake = function (model, skip, take, where, param, 
         where = "";
     let sql = util.format("SELECT %s FROM `%s` %s LIMIT %d,%d", returnFields, model.TableName, where, skip, take);
     return this.qSync(sql, param);
-
 };
 
 Connection.prototype.getByPageIndex = function (model, pageIndex, pageSize, where, param, returnFields) {
@@ -356,7 +366,6 @@ Connection.prototype.getByPageIndex = function (model, pageIndex, pageSize, wher
         pageIndex = 1;
 
     let skip = (pageIndex - 1) * pageSize;
-
     return this.getBySkipTake(model, skip, pageSize, where, param, returnFields);
 };
 
@@ -364,9 +373,16 @@ Connection.prototype.getByPage = function (model, pageIndex, pageSize, where, pa
     let me = this;
     return function (cb) {
         me.getTotal(model, where, param)(function (aNull, total) {
-            me.getByPageIndex(model, pageIndex, pageSize, where, param, returnFields)(function (bNull, rows) {
-                return cb(null, { total: total, rows: rows });
-            })
+            if (total === undefined)
+                cb(null, undefined);
+            else {
+                me.getByPageIndex(model, pageIndex, pageSize, where, param, returnFields)(function (bNull, rows) {
+                    if (rows === undefined)
+                        cb(null, undefined);
+                    else
+                        return cb(null, { total: total, rows: rows });
+                })
+            }
         });
     };
 };
@@ -386,6 +402,7 @@ function getConn(callback) {
     pool.getConnection(function (err, conn) {
         if (err) {
             console.error(err);
+            callback(undefined);
             return;
         }
         callback(conn);
@@ -399,6 +416,7 @@ function getConnSync() {
         pool.getConnection(function (err, conn) {
             if (err) {
                 console.error(err);
+                cb(null, undefined);
                 return;
             }
             cb(null, conn);
